@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="theme-color" content="#1a0d14" />
+<title>DOOM MOE — Kawaii Apocalypse</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- ============ HUD ============ -->
+  <div id="hud" class="hidden">
+    <div id="hud-top">
+      <div>SCORE <b id="hud-score">0</b></div>
+      <div>DEMONS <b id="hud-remaining">0</b></div>
+      <div>TIME <b id="hud-time">0:00</b></div>
+    </div>
+
+    <div id="crosshair">
+      <svg viewBox="0 0 16 16" shape-rendering="crispEdges">
+        <path fill="#FFEAF2" d="M6 1h4v2H6zM6 13h4v2H6zM1 6h2v4H1zM13 6h2v4h-2z"/>
+        <path fill="#F06A9B" d="M7 2h2v2H7zM7 12h2v2H7zM2 7h2v2H2zM12 7h2v2H12z"/>
+        <path fill="#FFFFFF" d="M6 6h4v4H6z"/>
+        <path fill="#F06A9B" d="M7 7h2v2H7z"/>
+      </svg>
+    </div>
+
+    <div id="hitmark"></div>
+    <div id="toast"></div>
+    <div id="secret-msg"></div>
+    <div id="interact-hint" class="hidden">[E]</div>
+
+    <div id="hud-bottom">
+      <div id="hud-bottom-left">
+        <div id="health-box">
+          <canvas id="health-icon" width="64" height="64"></canvas>
+          <span id="health-num">100</span>
+        </div>
+        <div id="keys-box">
+          <canvas id="keys-icon" width="56" height="32"></canvas>
+          <span id="keys-num">0</span>
+        </div>
+      </div>
+      <div id="weapon-box">
+        <div id="weapon-name">RIFFLE</div>
+        <div id="ammo">&#8734;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MENU ============ -->
+  <div id="screen-menu" class="screen">
+    <div class="menu-bg-layer" id="menu-bg-a"></div>
+    <div class="menu-bg-layer" id="menu-bg-b"></div>
+
+    <h1 class="logo">DOOM<span>MOE</span></h1>
+    <p class="tag">a very kawaii apocalypse</p>
+    <button data-action="start">START GAME</button>
+    <button data-action="settings" class="ghost">SETTINGS</button>
+    <button data-action="credits" class="ghost">CREDITS</button>
+
+    <div class="menu-corner pixel-text">click! to change!</div>
+  </div>
+
+  <div id="screen-settings" class="screen hidden">
+    <h2>SETTINGS</h2>
+    <div class="setrow"><label>MOUSE SENS</label><input id="set-sens" type="range" min="0.5" max="8" step="0.1" value="2.4"></div>
+    <div class="setrow"><label>MASTER VOL</label><input id="set-master" type="range" min="0" max="1" step="0.05" value="0.7"></div>
+    <div class="setrow"><label>MUSIC VOL</label><input id="set-music" type="range" min="0" max="1" step="0.05" value="0.35"></div>
+    <div class="setrow"><label>SFX VOL</label><input id="set-sfx" type="range" min="0" max="1" step="0.05" value="0.8"></div>
+    <div class="setrow"><label>MUSIC TRACK</label>
+      <select id="set-track">
+        <option value="shuffle">SHUFFLE (ALL)</option>
+        <option value="classic">KAWAII APOCALYPSE (CLASSIC)</option>
+        <option value="apocalypse">KAWAII APOCALYPSE (NEON)</option>
+        <option value="lullaby">CORRUPTED LULLABY</option>
+        <option value="rave">BLOOD RAVE</option>
+        <option value="off">OFF</option>
+      </select>
+    </div>
+    <div class="setrow"><label>CRT FILTER</label><input id="set-crt" type="checkbox" checked></div>
+    <button data-action="back">BACK</button>
+  </div>
+
+  <div id="screen-credits" class="screen hidden">
+    <h2>CREDITS</h2>
+    <div class="stats">
+      DESIGN &amp; CODE &mdash; procedural everything<br>
+      ENGINE &mdash; three.js<br>
+      AUDIO &mdash; Web Audio API<br>
+      ART &mdash; &lt;canvas&gt; 2D context<br><br>
+      <span style="color:#c40000">no external assets were harmed</span>
+    </div>
+    <button data-action="back">BACK</button>
+  </div>
+
+  <!-- Текст после одного ESC во время геймплея: h2 ниже -->
+  <div id="screen-pause" class="screen hidden">
+    <h2>PAUSED</h2>
+    <div class="stats" id="pause-stats"></div>
+    <button data-action="resume">RESUME</button>
+    <button data-action="settings" class="ghost">SETTINGS</button>
+    <button data-action="menu" class="ghost">MAIN MENU</button>
+  </div>
+
+  <div id="screen-dead" class="screen hidden">
+    <h2 class="dead">YOU DIED</h2>
+    <div class="stats" id="dead-stats"></div>
+    <button data-action="restart">PLAY AGAIN</button>
+    <button data-action="menu" class="ghost">MAIN MENU</button>
+  </div>
+
+  <div id="screen-victory" class="screen hidden">
+    <h2>LEVEL CLEARED</h2>
+    <div class="stats" id="win-stats"></div>
+    <button data-action="restart">PLAY AGAIN</button>
+    <button data-action="menu" class="ghost">MAIN MENU</button>
+  </div>
+
+  <!-- Подсказка-баннер, когда мышь не захвачена. Текст меняется тут же. -->
+  <div id="lock-hint" class="hidden">
+    CLICK TO CAPTURE MOUSE<br>
+    <span class="lock-hint-sub">press ESC for pause menu :3</span>
+  </div>
+
+  <div id="touch">
+    <div id="stick-base"><div id="stick-knob"></div></div>
+    <div id="btn-fire" class="tbtn">FIRE</div>
+    <div id="btn-jump" class="tbtn">JUMP</div>
+    <div id="btn-swap" class="tbtn">SWAP</div>
+    <div id="btn-use"  class="tbtn">USE</div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
